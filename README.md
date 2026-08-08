@@ -135,3 +135,12 @@ The upstream API is a shared public playground, which shapes several design deci
 
 [API.md](docs/API.md) documents every quirk found while building this, and how the code
 handles each one.
+
+---
+
+## License
+
+[MIT](LICENSE) © Mauricio Arce Torrez
+
+The upstream [Platzi Fake Store API](https://fakeapi.platzi.com/) is a third-party service
+with its own terms; this licence covers the code in this repository only.
