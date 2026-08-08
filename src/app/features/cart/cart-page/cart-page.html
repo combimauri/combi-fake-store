@@ -1,0 +1,132 @@
+<div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+  <h1 class="font-display text-3xl font-semibold">Your cart</h1>
+
+  @if (cart.isEmpty()) {
+    <combi-empty-state
+      icon="cart"
+      title="Your cart is empty"
+      description="Once you add something, it stays here even if you close the tab."
+    >
+      <a routerLink="/" class="btn btn-primary btn-sm mt-5">Start shopping</a>
+    </combi-empty-state>
+  } @else {
+    <p class="mt-2 text-sm text-muted-foreground">
+      <span class="tabular font-semibold text-foreground">{{ cart.itemCount() }}</span>
+      {{ cart.itemCount() === 1 ? 'item' : 'items' }}
+    </p>
+
+    <div class="mt-8 lg:grid lg:grid-cols-[1fr_22rem] lg:items-start lg:gap-10">
+      <!-- Lines -->
+      <ul class="space-y-4">
+        @for (line of cart.items(); track line.product.id) {
+          <li class="card flex gap-4 p-4">
+            <a [routerLink]="['/products', line.product.slug]" class="w-24 shrink-0 sm:w-28">
+              <combi-safe-image
+                [src]="line.product.images[0]"
+                [alt]="line.product.title"
+                ratio="1 / 1"
+                class="overflow-hidden rounded-lg"
+              />
+            </a>
+
+            <div class="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+              <div class="min-w-0 flex-1">
+                <h2 class="truncate text-sm font-semibold">
+                  <a
+                    [routerLink]="['/products', line.product.slug]"
+                    class="transition-colors hover:text-accent"
+                  >
+                    {{ line.product.title }}
+                  </a>
+                </h2>
+                <p class="mt-0.5 text-xs text-muted-foreground">
+                  {{ line.product.category.name }}
+                </p>
+                <p class="tabular mt-1.5 text-sm font-semibold">
+                  {{ line.product.price | currency: 'USD' }}
+                </p>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <combi-quantity-stepper
+                  [quantity]="line.quantity"
+                  [label]="line.product.title"
+                  (quantityChange)="cart.setQuantity(line.product.id, $event)"
+                />
+
+                <p class="tabular hidden w-24 text-right font-display font-semibold sm:block">
+                  {{ line.product.price * line.quantity | currency: 'USD' }}
+                </p>
+
+                <button
+                  type="button"
+                  class="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive-soft hover:text-destructive"
+                  [attr.aria-label]="'Remove ' + line.product.title + ' from cart'"
+                  (click)="remove(line.product.id, line.product.title)"
+                >
+                  <combi-icon name="trash" [size]="17" />
+                </button>
+              </div>
+            </div>
+          </li>
+        }
+      </ul>
+
+      <!-- Summary -->
+      <aside class="mt-8 lg:sticky lg:top-24 lg:mt-0">
+        <div class="card p-6">
+          <h2 class="font-display text-lg font-semibold">Order summary</h2>
+
+          @if (cart.amountToFreeShipping() > 0) {
+            <p class="mt-4 rounded-lg bg-accent-soft px-3 py-2.5 text-xs font-medium text-accent">
+              Add {{ cart.amountToFreeShipping() | currency: 'USD' }} more for free delivery.
+            </p>
+          }
+
+          <dl class="mt-5 space-y-3 text-sm">
+            <div class="flex justify-between">
+              <dt class="text-muted-foreground">Subtotal</dt>
+              <dd class="tabular font-medium">{{ cart.totals().subtotal | currency: 'USD' }}</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-muted-foreground">Delivery</dt>
+              <dd class="tabular font-medium">
+                @if (cart.totals().shipping === 0) {
+                  <span class="text-success">Free</span>
+                } @else {
+                  {{ cart.totals().shipping | currency: 'USD' }}
+                }
+              </dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-muted-foreground">Estimated tax</dt>
+              <dd class="tabular font-medium">{{ cart.totals().tax | currency: 'USD' }}</dd>
+            </div>
+            <div class="flex justify-between border-t pt-3 font-display text-base font-semibold">
+              <dt>Total</dt>
+              <dd class="tabular">{{ cart.totals().total | currency: 'USD' }}</dd>
+            </div>
+          </dl>
+
+          <a routerLink="/checkout" class="btn btn-accent mt-6 w-full">
+            Checkout
+            <combi-icon name="arrowRight" [size]="16" />
+          </a>
+
+          <div class="mt-4 flex justify-between text-xs">
+            <a routerLink="/" class="font-semibold text-muted-foreground hover:text-foreground">
+              Continue shopping
+            </a>
+            <button
+              type="button"
+              class="cursor-pointer font-semibold text-muted-foreground hover:text-destructive"
+              (click)="clear()"
+            >
+              Empty cart
+            </button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  }
+</div>

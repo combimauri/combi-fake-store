@@ -56,3 +56,41 @@ You are an expert in TypeScript, Angular, and scalable web application developme
 - Use the `providedIn: 'root'` option for singleton services
 - Prefer the `@Service` decorator over `@Injectable({providedIn: 'root'})` for new singleton services (Angular v22+)
 - Use the `inject()` function instead of constructor injection
+
+---
+
+# This project: FakeStore
+
+An Angular 22 storefront on the public Platzi Fake Store API. Read `README.md` first, then
+the guide in `docs/` that matches your task:
+
+| Task | Read |
+| --- | --- |
+| Understand the layout of the code | `docs/ARCHITECTURE.md` |
+| Understand *why* something is built oddly | `docs/DECISIONS.md` |
+| Call the API | `docs/API.md` |
+| Touch anything visual | `docs/DESIGN-SYSTEM.md` |
+| Add a feature, run tests, deploy | `docs/DEVELOPMENT.md` |
+| Know what a screen does | `docs/FEATURES.md` |
+
+## Project-specific rules
+
+These override nothing above, but they are easy to get wrong here:
+
+- **The API is a shared public database, reseeded daily.** Never hardcode a product or
+  category ID. Route products by **slug**.
+- **`limit` is ignored unless `offset` is sent too.** `toQueryParams()` in `product-api.ts`
+  handles this; do not "simplify" it.
+- **A missing record returns HTTP 400, not 404.** Detect it with `toApiError(...).kind ===
+  'not-found'`, never by status code.
+- **Never call `GET /categories` for storefront filtering.** It is full of junk records
+  created by other users. Derive category facets from the products actually returned.
+- **Guards must `await session.whenReady()`** before checking authentication, and must call
+  `inject()` before that await.
+- **Persist store state inside the mutation**, not from an `effect()`.
+- **Use design tokens** (`bg-surface`, `text-muted-foreground`, `.btn`, `.card`). A raw hex
+  value in a component means a token is missing.
+- **No emoji as icons.** Add path data to the `PATHS` map in `shared/ui/icon/icon.ts`.
+- **Writes are unauthenticated upstream.** Auth here is a UX simulation, not a security
+  boundary — do not describe it as protection.
+- Run `npm run build` and `npm test` before considering a change done.

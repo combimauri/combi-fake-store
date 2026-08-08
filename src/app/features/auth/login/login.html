@@ -1,0 +1,77 @@
+<div class="mx-auto flex max-w-md flex-col justify-center px-4 py-16 sm:px-6">
+  <h1 class="font-display text-3xl font-semibold">Sign in</h1>
+  <p class="mt-2 text-sm text-muted-foreground">Access your account to check out faster.</p>
+
+  <div class="card mt-8 p-6">
+    <form novalidate (submit)="signIn(); $event.preventDefault()">
+      @if (failure(); as message) {
+        <p
+          class="mb-5 flex items-start gap-2 rounded-lg bg-destructive-soft px-3.5 py-3 text-sm font-medium text-destructive"
+          role="alert"
+        >
+          <combi-icon name="alert" [size]="16" class="mt-0.5" />
+          {{ message }}
+        </p>
+      }
+
+      <div class="space-y-5">
+        <div>
+          <label class="label" for="login-email">Email</label>
+          <input
+            id="login-email"
+            type="email"
+            class="input"
+            autocomplete="email"
+            [class.input-invalid]="
+              loginForm.email().touched() && loginForm.email().errors().length > 0
+            "
+            [formField]="loginForm.email"
+          />
+          @if (loginForm.email().touched() && loginForm.email().errors().length) {
+            <p class="field-error" role="alert">
+              <combi-icon name="alert" [size]="13" />
+              {{ loginForm.email().errors()[0].message }}
+            </p>
+          }
+        </div>
+
+        <div>
+          <label class="label" for="login-password">Password</label>
+          <input
+            id="login-password"
+            type="password"
+            class="input"
+            autocomplete="current-password"
+            [class.input-invalid]="
+              loginForm.password().touched() && loginForm.password().errors().length > 0
+            "
+            [formField]="loginForm.password"
+          />
+          @if (loginForm.password().touched() && loginForm.password().errors().length) {
+            <p class="field-error" role="alert">
+              <combi-icon name="alert" [size]="13" />
+              {{ loginForm.password().errors()[0].message }}
+            </p>
+          }
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary mt-6 w-full" [disabled]="busy()">
+        @if (busy()) {
+          Signing in…
+        } @else {
+          Sign in
+        }
+      </button>
+    </form>
+
+    <button type="button" class="btn btn-outline btn-sm mt-3 w-full" (click)="fillDemo()">
+      Use the demo account
+    </button>
+  </div>
+
+  <p class="mt-6 text-center text-sm text-muted-foreground">
+    Don't have an account?
+    <a routerLink="/register" class="font-semibold text-accent hover:underline">Create one</a>
+  </p>
+</div>

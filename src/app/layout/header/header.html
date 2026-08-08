@@ -1,0 +1,167 @@
+<!-- Sticky, translucent so content scrolling underneath stays visible. -->
+<header
+  class="sticky top-0 z-50 border-b bg-surface/85 backdrop-blur-lg supports-[backdrop-filter]:bg-surface/70"
+>
+  <div class="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6 lg:px-8">
+    <a routerLink="/" class="flex items-center gap-2 font-display text-lg font-semibold">
+      <span
+        class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-on-primary"
+        aria-hidden="true"
+      >
+        <combi-icon name="store" [size]="17" />
+      </span>
+      <span>Fake<span class="text-accent">Store</span></span>
+    </a>
+
+    <nav class="ml-4 hidden items-center gap-1 md:flex" aria-label="Main">
+      <a
+        routerLink="/"
+        routerLinkActive="!text-foreground !bg-surface-sunken"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="rounded-full px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-surface-sunken hover:text-foreground"
+      >
+        Shop
+      </a>
+      <a
+        routerLink="/stores"
+        routerLinkActive="!text-foreground !bg-surface-sunken"
+        class="rounded-full px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-surface-sunken hover:text-foreground"
+      >
+        Stores
+      </a>
+      @if (session.isAdmin()) {
+        <a
+          routerLink="/admin"
+          routerLinkActive="!text-foreground !bg-surface-sunken"
+          class="rounded-full px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-surface-sunken hover:text-foreground"
+        >
+          Admin
+        </a>
+      }
+    </nav>
+
+    <div class="ml-auto flex items-center gap-1">
+      <combi-theme-toggle />
+
+      <!-- Account -->
+      @if (session.isAuthenticated()) {
+        <div class="relative">
+          <button
+            type="button"
+            class="flex h-11 items-center gap-2 rounded-full px-2 text-muted-foreground transition-colors hover:bg-surface-sunken hover:text-foreground"
+            [attr.aria-expanded]="accountMenuOpen()"
+            aria-haspopup="menu"
+            aria-label="Account menu"
+            (click)="toggleAccountMenu()"
+          >
+            <combi-icon name="user" [size]="18" />
+            <span class="hidden max-w-24 truncate text-sm font-semibold lg:inline">
+              {{ session.user()?.name }}
+            </span>
+          </button>
+
+          @if (accountMenuOpen()) {
+            <div
+              class="card animate-rise absolute right-0 mt-2 w-52 overflow-hidden p-1.5 shadow-xl"
+              role="menu"
+            >
+              <a
+                routerLink="/account"
+                role="menuitem"
+                class="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-surface-sunken"
+                (click)="closeMenu()"
+              >
+                <combi-icon name="user" [size]="16" />
+                My account
+              </a>
+              @if (session.isAdmin()) {
+                <a
+                  routerLink="/admin"
+                  role="menuitem"
+                  class="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-surface-sunken"
+                  (click)="closeMenu()"
+                >
+                  <combi-icon name="settings" [size]="16" />
+                  Admin
+                </a>
+              }
+              <!-- Sign out sits below a divider, away from routine navigation. -->
+              <div class="my-1.5 border-t"></div>
+              <button
+                type="button"
+                role="menuitem"
+                class="flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-destructive transition-colors hover:bg-destructive-soft"
+                (click)="signOut()"
+              >
+                <combi-icon name="logout" [size]="16" />
+                Sign out
+              </button>
+            </div>
+          }
+        </div>
+      } @else {
+        <a routerLink="/login" class="btn btn-ghost btn-sm hidden sm:inline-flex">Sign in</a>
+      }
+
+      <!-- Cart -->
+      <a
+        routerLink="/cart"
+        class="relative flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-surface-sunken hover:text-foreground"
+        [attr.aria-label]="'Cart, ' + cart.itemCount() + ' items'"
+      >
+        <combi-icon name="cart" [size]="19" />
+        @if (cart.itemCount() > 0) {
+          <span
+            class="tabular absolute top-1 right-1 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-on-accent"
+            aria-hidden="true"
+          >
+            {{ cart.itemCount() }}
+          </span>
+        }
+      </a>
+
+      <button
+        type="button"
+        class="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-surface-sunken md:hidden"
+        [attr.aria-expanded]="menuOpen()"
+        aria-label="Toggle navigation"
+        (click)="toggleMenu()"
+      >
+        <combi-icon [name]="menuOpen() ? 'close' : 'filter'" [size]="18" />
+      </button>
+    </div>
+  </div>
+
+  @if (menuOpen()) {
+    <nav class="border-t px-4 py-3 md:hidden" aria-label="Mobile">
+      <a
+        routerLink="/"
+        class="block rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors hover:bg-surface-sunken"
+        (click)="closeMenu()"
+        >Shop</a
+      >
+      <a
+        routerLink="/stores"
+        class="block rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors hover:bg-surface-sunken"
+        (click)="closeMenu()"
+        >Stores</a
+      >
+      @if (!session.isAuthenticated()) {
+        <a
+          routerLink="/login"
+          class="block rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors hover:bg-surface-sunken"
+          (click)="closeMenu()"
+          >Sign in</a
+        >
+      }
+      @if (session.isAdmin()) {
+        <a
+          routerLink="/admin"
+          class="block rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors hover:bg-surface-sunken"
+          (click)="closeMenu()"
+          >Admin</a
+        >
+      }
+    </nav>
+  }
+</header>

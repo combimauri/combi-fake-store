@@ -1,0 +1,145 @@
+<section class="border-b bg-surface-sunken">
+  <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
+    <p
+      class="mb-3 inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold text-accent"
+    >
+      <combi-icon name="spark" [size]="13" />
+      Fresh catalogue, reseeded daily
+    </p>
+    <h1 class="max-w-2xl font-display text-4xl font-semibold text-balance sm:text-5xl">
+      Everything you need, and a few things you don't.
+    </h1>
+    <p class="mt-4 max-w-xl text-base text-muted-foreground">
+      Browse the full Platzi Fake Store catalogue with live filtering, sorting and a cart that
+      survives a refresh.
+    </p>
+  </div>
+</section>
+
+<div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+  <div class="lg:grid lg:grid-cols-[16rem_1fr] lg:gap-10">
+    <!-- Filters: a sticky rail on desktop, stacked above results on mobile. -->
+    <aside class="mb-8 lg:mb-0">
+      <div class="lg:sticky lg:top-24">
+        <combi-filter-panel
+          [categories]="facets()"
+          [loading]="products.isLoading()"
+          [activeCategory]="category()"
+          [minPrice]="minPrice()"
+          [maxPrice]="maxPrice()"
+          [hasActiveFilters]="hasActiveFilters()"
+          (categoryChange)="onCategory($event)"
+          (priceChange)="onPrice($event)"
+          (clear)="clearFilters()"
+        />
+      </div>
+    </aside>
+
+    <div>
+      <!-- Search + sort -->
+      <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div class="relative flex-1">
+          <span
+            class="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-muted-foreground"
+          >
+            <combi-icon name="search" [size]="17" />
+          </span>
+          <label for="catalog-search" class="sr-only">Search products</label>
+          <input
+            id="catalog-search"
+            type="search"
+            class="input !pl-10"
+            placeholder="Search products…"
+            autocomplete="off"
+            [value]="searchDraft()"
+            (input)="onSearch($any($event.target).value)"
+          />
+        </div>
+
+        <div class="flex items-center gap-2">
+          <label for="catalog-sort" class="text-sm font-medium text-muted-foreground"> Sort </label>
+          <select
+            id="catalog-sort"
+            class="input !w-auto pr-8"
+            [value]="sort()"
+            (change)="onSort($any($event.target).value)"
+          >
+            <option value="featured">Featured</option>
+            <option value="price-asc">Price: low to high</option>
+            <option value="price-desc">Price: high to low</option>
+            <option value="title-asc">Name: A–Z</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Result count, reserved so the row does not appear and shift content -->
+      <p class="mb-5 min-h-5 text-sm text-muted-foreground" aria-live="polite">
+        @if (!products.isLoading() && !error()) {
+          <span class="tabular font-semibold text-foreground">{{ resultCount() }}</span>
+          {{ resultCount() === 1 ? 'product' : 'products' }}
+          @if (hasActiveFilters()) {
+            <span>matching your filters</span>
+          }
+        }
+      </p>
+
+      @if (error(); as failure) {
+        <div class="card border-destructive/40 bg-destructive-soft p-6 text-center">
+          <p class="font-semibold text-destructive">{{ failure.message }}</p>
+          <p class="mt-1 text-sm text-muted-foreground">The catalogue could not be loaded.</p>
+          <button type="button" class="btn btn-outline btn-sm mt-4" (click)="products.reload()">
+            Try again
+          </button>
+        </div>
+      } @else if (products.isLoading()) {
+        <!-- Skeletons mirror the real grid so nothing jumps when data lands. -->
+        <div class="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
+          @for (item of skeletons; track $index) {
+            <div class="card overflow-hidden">
+              <div class="skeleton !rounded-none" style="aspect-ratio: 4 / 5"></div>
+              <div class="space-y-2 p-4">
+                <div class="skeleton h-3.5 w-full"></div>
+                <div class="skeleton h-3.5 w-2/3"></div>
+                <div class="skeleton h-6 w-20"></div>
+                <div class="skeleton h-9 w-full !rounded-full"></div>
+              </div>
+            </div>
+          }
+        </div>
+      } @else if (pageItems().length === 0) {
+        <combi-empty-state
+          icon="search"
+          title="No products match those filters"
+          description="Try widening the price range, choosing another category, or searching for something else."
+        >
+          @if (hasActiveFilters()) {
+            <button type="button" class="btn btn-primary btn-sm mt-5" (click)="clearFilters()">
+              Clear filters
+            </button>
+          }
+        </combi-empty-state>
+      } @else {
+        <div class="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
+          @for (product of pageItems(); track product.id; let i = $index) {
+            <combi-product-card
+              class="animate-rise"
+              [style.--stagger.ms]="i * 35"
+              [product]="product"
+              [quantityInCart]="quantityOf(product.id)"
+              [eager]="i < 4"
+              (add)="addToCart($event)"
+            />
+          }
+        </div>
+
+        <div class="mt-10">
+          <combi-pagination
+            [page]="page()"
+            [totalPages]="totalPages()"
+            (pageChange)="onPage($event)"
+          />
+        </div>
+      }
+    </div>
+  </div>
+</div>

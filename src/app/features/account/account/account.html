@@ -1,0 +1,129 @@
+<div class="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+  <h1 class="font-display text-3xl font-semibold">My account</h1>
+
+  @if (session.isRestoring()) {
+    <div class="card mt-8 space-y-4 p-6">
+      <div class="skeleton h-16 w-16 !rounded-full"></div>
+      <div class="skeleton h-4 w-40"></div>
+      <div class="skeleton h-11 w-full"></div>
+      <div class="skeleton h-11 w-full"></div>
+    </div>
+  } @else if (session.user(); as user) {
+    <div class="card mt-8 p-6">
+      <div class="flex items-center gap-4">
+        <combi-safe-image
+          [src]="user.avatar"
+          [alt]="user.name"
+          ratio="1 / 1"
+          class="w-16 shrink-0 overflow-hidden rounded-full"
+        />
+        <div>
+          <p class="font-display text-lg font-semibold">{{ user.name }}</p>
+          <p class="text-sm text-muted-foreground">{{ user.email }}</p>
+          <span
+            class="mt-1.5 inline-block rounded-full bg-surface-sunken px-2.5 py-0.5 text-xs font-semibold capitalize"
+          >
+            {{ user.role }}
+          </span>
+        </div>
+      </div>
+
+      @if (user.role !== 'admin') {
+        <p class="mt-5 rounded-lg bg-surface-sunken px-3.5 py-3 text-xs text-muted-foreground">
+          Admin tools need an account with the <strong>admin</strong> role. The API assigns
+          <strong>customer</strong> to accounts created here, so the admin area stays locked for
+          this profile.
+        </p>
+      } @else {
+        <a routerLink="/admin" class="btn btn-outline btn-sm mt-5">
+          <combi-icon name="settings" [size]="15" />
+          Open admin
+        </a>
+      }
+    </div>
+
+    <div class="card mt-6 p-6">
+      <h2 class="font-display text-lg font-semibold">Edit profile</h2>
+
+      <form class="mt-6" novalidate (submit)="save(); $event.preventDefault()">
+        @if (failure(); as message) {
+          <p
+            class="mb-5 flex items-start gap-2 rounded-lg bg-destructive-soft px-3.5 py-3 text-sm font-medium text-destructive"
+            role="alert"
+          >
+            <combi-icon name="alert" [size]="16" class="mt-0.5" />
+            {{ message }}
+          </p>
+        }
+
+        <div class="space-y-5">
+          <div>
+            <label class="label" for="account-name">Name</label>
+            <input
+              id="account-name"
+              class="input"
+              autocomplete="name"
+              [class.input-invalid]="
+                profileForm.name().touched() && profileForm.name().errors().length > 0
+              "
+              [formField]="profileForm.name"
+            />
+            @if (profileForm.name().touched() && profileForm.name().errors().length) {
+              <p class="field-error" role="alert">
+                <combi-icon name="alert" [size]="13" />
+                {{ profileForm.name().errors()[0].message }}
+              </p>
+            }
+          </div>
+
+          <div>
+            <label class="label" for="account-email">Email</label>
+            <input
+              id="account-email"
+              type="email"
+              class="input"
+              autocomplete="email"
+              [class.input-invalid]="
+                profileForm.email().touched() && profileForm.email().errors().length > 0
+              "
+              [formField]="profileForm.email"
+            />
+            @if (profileForm.email().touched() && profileForm.email().errors().length) {
+              <p class="field-error" role="alert">
+                <combi-icon name="alert" [size]="13" />
+                {{ profileForm.email().errors()[0].message }}
+              </p>
+            }
+          </div>
+
+          <div>
+            <label class="label" for="account-avatar">Avatar URL</label>
+            <input
+              id="account-avatar"
+              type="url"
+              class="input"
+              [class.input-invalid]="
+                profileForm.avatar().touched() && profileForm.avatar().errors().length > 0
+              "
+              [formField]="profileForm.avatar"
+            />
+            @if (profileForm.avatar().touched() && profileForm.avatar().errors().length) {
+              <p class="field-error" role="alert">
+                <combi-icon name="alert" [size]="13" />
+                {{ profileForm.avatar().errors()[0].message }}
+              </p>
+            }
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-6" [disabled]="busy()">
+          @if (busy()) {
+            Saving…
+          } @else {
+            Save changes
+          }
+        </button>
+      </form>
+    </div>
+  }
+</div>

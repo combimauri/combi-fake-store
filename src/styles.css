@@ -1,3 +1,281 @@
-/* You can add global styles to this file, and also import other style files */
-
 @import 'tailwindcss';
+
+/* Dark mode is driven by a class on <html> so the toggle can override the OS. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Semantic tokens. Light and dark are authored as separate palettes rather than
+ * inverted values, so contrast holds in both themes.
+ */
+:root {
+  --surface: #fafaf9;
+  --surface-raised: #ffffff;
+  --surface-sunken: #f5f5f4;
+  --foreground: #0c0a09;
+  --muted-foreground: #57534e;
+  --primary: #1c1917;
+  --on-primary: #ffffff;
+  --accent: #a16207;
+  --accent-soft: #fef3c7;
+  --on-accent: #ffffff;
+  --border: #d6d3d1;
+  --border-strong: #a8a29e;
+  --destructive: #dc2626;
+  --destructive-soft: #fef2f2;
+  --success: #15803d;
+  --success-soft: #f0fdf4;
+  --ring: #1c1917;
+  --overlay: rgb(12 10 9 / 0.55);
+}
+
+.dark {
+  --surface: #0c0a09;
+  --surface-raised: #1c1917;
+  --surface-sunken: #171412;
+  --foreground: #fafaf9;
+  --muted-foreground: #a8a29e;
+  --primary: #fafaf9;
+  --on-primary: #0c0a09;
+  --accent: #fbbf24;
+  --accent-soft: #292219;
+  --on-accent: #1c1917;
+  --border: #292524;
+  --border-strong: #44403c;
+  --destructive: #f87171;
+  --destructive-soft: #2a1616;
+  --success: #4ade80;
+  --success-soft: #14231a;
+  --ring: #fbbf24;
+  --overlay: rgb(0 0 0 / 0.7);
+}
+
+/* `inline` lets the utilities resolve the custom properties at runtime, which
+ * is what makes a single class like `bg-surface` follow the active theme. */
+@theme inline {
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-destructive: var(--destructive);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-ring: var(--ring);
+
+  --font-display: 'Rubik', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Nunito Sans', ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 0.875rem;
+}
+
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--surface);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    font-weight: 600;
+  }
+
+  /* A visible focus ring is required on every interactive element; never remove it. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Prices and quantities use tabular figures so columns don't jitter. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-full
+      px-5 text-sm font-semibold transition-all duration-200 select-none;
+    /* 44px min height keeps every button at the accessible touch-target size. */
+    min-height: 2.75rem;
+  }
+
+  .btn:disabled {
+    @apply cursor-not-allowed opacity-50;
+  }
+
+  .btn-primary {
+    background-color: var(--primary);
+    color: var(--on-primary);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    opacity: 0.88;
+    transform: translateY(-1px);
+  }
+
+  .btn-accent {
+    background-color: var(--accent);
+    color: var(--on-accent);
+  }
+
+  .btn-accent:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  .btn-outline {
+    @apply border bg-transparent;
+    color: var(--foreground);
+    border-color: var(--border-strong);
+  }
+
+  .btn-outline:hover:not(:disabled) {
+    background-color: var(--surface-sunken);
+  }
+
+  .btn-ghost {
+    @apply bg-transparent;
+    color: var(--muted-foreground);
+  }
+
+  .btn-ghost:hover:not(:disabled) {
+    background-color: var(--surface-sunken);
+    color: var(--foreground);
+  }
+
+  .btn-danger {
+    background-color: var(--destructive);
+    color: #ffffff;
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  .btn-sm {
+    @apply px-3.5 text-xs;
+    min-height: 2.25rem;
+  }
+
+  .card {
+    @apply rounded-[--radius-card] border transition-colors;
+    background-color: var(--surface-raised);
+    border-color: var(--border);
+  }
+
+  .input {
+    @apply w-full rounded-xl border px-3.5 text-sm transition-colors;
+    background-color: var(--surface-raised);
+    border-color: var(--border);
+    color: var(--foreground);
+    /* 44px keeps mobile inputs above the touch minimum and stops iOS zoom. */
+    min-height: 2.75rem;
+  }
+
+  .input:hover:not(:disabled) {
+    border-color: var(--border-strong);
+  }
+
+  .input::placeholder {
+    color: var(--muted-foreground);
+    opacity: 0.7;
+  }
+
+  .input-invalid {
+    border-color: var(--destructive);
+  }
+
+  .label {
+    @apply mb-1.5 block text-sm font-semibold;
+    color: var(--foreground);
+  }
+
+  .field-error {
+    @apply mt-1.5 flex items-start gap-1.5 text-xs font-medium;
+    color: var(--destructive);
+  }
+
+  .skeleton {
+    @apply animate-pulse rounded-lg;
+    background-color: var(--surface-sunken);
+  }
+
+  .chip {
+    @apply inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5
+      text-xs font-semibold whitespace-nowrap transition-all duration-200;
+    border-color: var(--border);
+    color: var(--muted-foreground);
+    background-color: var(--surface-raised);
+  }
+
+  .chip:hover {
+    border-color: var(--border-strong);
+    color: var(--foreground);
+  }
+
+  .chip-active {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: var(--on-primary);
+  }
+}
+
+/* Entrance motion, staggered by the caller via --stagger. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-rise {
+  animation: rise 380ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: var(--stagger, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .btn:hover:not(:disabled) {
+    transform: none;
+  }
+}

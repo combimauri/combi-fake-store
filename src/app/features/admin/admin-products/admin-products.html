@@ -1,0 +1,112 @@
+<div class="mb-5 flex flex-wrap items-center gap-3">
+  <div class="relative min-w-56 flex-1">
+    <span
+      class="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-muted-foreground"
+    >
+      <combi-icon name="search" [size]="16" />
+    </span>
+    <label for="admin-search" class="sr-only">Filter products</label>
+    <input
+      id="admin-search"
+      type="search"
+      class="input !pl-10"
+      placeholder="Filter by name or category…"
+      [value]="search()"
+      (input)="search.set($any($event.target).value)"
+    />
+  </div>
+  <button type="button" class="btn btn-outline btn-sm" (click)="products.reload()">Refresh</button>
+</div>
+
+@if (products.isLoading()) {
+  <div class="space-y-2">
+    @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+      <div class="skeleton h-18 w-full"></div>
+    }
+  </div>
+} @else if (filtered().length === 0) {
+  <combi-empty-state
+    icon="package"
+    title="No products found"
+    description="Nothing matches that filter."
+  />
+} @else {
+  <p class="mb-3 text-sm text-muted-foreground">
+    <span class="tabular font-semibold text-foreground">{{ filtered().length }}</span> products
+  </p>
+
+  <div class="card overflow-hidden">
+    <!-- Wide table scrolls inside its own container so the page never does. -->
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="border-b bg-surface-sunken text-left">
+          <tr>
+            <th scope="col" class="px-4 py-3 font-semibold">Product</th>
+            <th scope="col" class="px-4 py-3 font-semibold">Category</th>
+            <th scope="col" class="px-4 py-3 text-right font-semibold">Price</th>
+            <th scope="col" class="px-4 py-3 text-right font-semibold">
+              <span class="sr-only">Actions</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (product of filtered(); track product.id) {
+            <tr class="border-b last:border-0">
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-3">
+                  <combi-safe-image
+                    [src]="product.images[0]"
+                    [alt]="''"
+                    ratio="1 / 1"
+                    class="w-11 shrink-0 overflow-hidden rounded-lg"
+                  />
+                  <div class="min-w-0">
+                    <p class="max-w-64 truncate font-medium">{{ product.title }}</p>
+                    <p class="tabular text-xs text-muted-foreground">#{{ product.id }}</p>
+                  </div>
+                </div>
+              </td>
+              <td class="px-4 py-3 text-muted-foreground">{{ product.category.name }}</td>
+              <td class="tabular px-4 py-3 text-right font-medium">
+                {{ product.price | currency: 'USD' }}
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex justify-end gap-1">
+                  <a
+                    [routerLink]="['/admin/products', product.id, 'edit']"
+                    class="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-surface-sunken hover:text-foreground"
+                    [attr.aria-label]="'Edit ' + product.title"
+                  >
+                    <combi-icon name="edit" [size]="16" />
+                  </a>
+                  <button
+                    type="button"
+                    class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive-soft hover:text-destructive"
+                    [attr.aria-label]="'Delete ' + product.title"
+                    (click)="pendingDelete.set(product)"
+                  >
+                    <combi-icon name="trash" [size]="16" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}
+
+<combi-confirm-dialog
+  [open]="pendingDelete() !== undefined"
+  title="Delete this product?"
+  [message]="
+    'This removes \'' +
+    (pendingDelete()?.title ?? '') +
+    '\' from the shared public database for everyone.'
+  "
+  confirmLabel="Delete product"
+  [busy]="deleting()"
+  (confirm)="confirmDelete()"
+  (cancel)="pendingDelete.set(undefined)"
+/>

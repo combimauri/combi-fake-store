@@ -1,0 +1,78 @@
+<div class="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+  <h1 class="font-display text-3xl font-semibold">Store locator</h1>
+  <p class="mt-2 max-w-xl text-sm text-muted-foreground">
+    Locations are returned by the API sorted by distance from a chosen point.
+  </p>
+
+  <div class="mt-6 flex flex-wrap items-center gap-2">
+    <button
+      type="button"
+      class="btn btn-outline btn-sm"
+      [disabled]="locating()"
+      (click)="useMyLocation()"
+    >
+      <combi-icon name="mapPin" [size]="15" />
+      {{ locating() ? 'Locating…' : 'Use my location' }}
+    </button>
+
+    @if (usingMyLocation()) {
+      <button type="button" class="btn btn-ghost btn-sm" (click)="resetOrigin()">
+        Reset to Medellín
+      </button>
+    }
+
+    <button
+      type="button"
+      class="chip"
+      [class.chip-active]="radius() !== undefined"
+      [attr.aria-pressed]="radius() !== undefined"
+      (click)="toggleRadius()"
+    >
+      Within 10 km
+    </button>
+  </div>
+
+  @if (locations.isLoading()) {
+    <div class="mt-8 grid gap-3 sm:grid-cols-2">
+      @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+        <div class="skeleton h-28 w-full"></div>
+      }
+    </div>
+  } @else if (!hasResults()) {
+    <combi-empty-state
+      icon="mapPin"
+      title="No stores in range"
+      description="Try turning off the radius filter or picking a different origin."
+    />
+  } @else {
+    <ul class="mt-8 grid gap-3 sm:grid-cols-2">
+      @for (location of locations.value(); track location.id; let i = $index) {
+        <li class="card animate-rise p-5" [style.--stagger.ms]="i * 30">
+          <div class="flex items-start gap-3">
+            <span
+              class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent"
+              aria-hidden="true"
+            >
+              <combi-icon name="store" [size]="17" />
+            </span>
+            <div class="min-w-0 flex-1">
+              <h2 class="truncate text-sm font-semibold">{{ location.name }}</h2>
+              <p class="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                {{ location.description }}
+              </p>
+              <a
+                [href]="mapLink(location)"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="mt-2.5 inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline"
+              >
+                Open in Maps
+                <combi-icon name="arrowRight" [size]="13" />
+              </a>
+            </div>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</div>

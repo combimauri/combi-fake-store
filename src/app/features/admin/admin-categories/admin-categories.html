@@ -1,0 +1,118 @@
+<div class="grid gap-6 lg:grid-cols-[1fr_20rem] lg:items-start">
+  <div class="card overflow-hidden">
+    @if (categories.isLoading()) {
+      <div class="space-y-2 p-4">
+        @for (i of [1, 2, 3, 4]; track i) {
+          <div class="skeleton h-14 w-full"></div>
+        }
+      </div>
+    } @else {
+      <ul>
+        @for (category of categories.value(); track category.id) {
+          <li class="flex items-center gap-3 border-b px-4 py-3 last:border-0">
+            <combi-safe-image
+              [src]="category.image"
+              [alt]="''"
+              ratio="1 / 1"
+              class="w-11 shrink-0 overflow-hidden rounded-lg"
+            />
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm font-medium">{{ category.name }}</p>
+              <p class="truncate text-xs text-muted-foreground">/{{ category.slug }}</p>
+            </div>
+            <div class="flex gap-1">
+              <button
+                type="button"
+                class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-surface-sunken hover:text-foreground"
+                [attr.aria-label]="'Edit ' + category.name"
+                (click)="startEdit(category)"
+              >
+                <combi-icon name="edit" [size]="16" />
+              </button>
+              <button
+                type="button"
+                class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive-soft hover:text-destructive"
+                [attr.aria-label]="'Delete ' + category.name"
+                (click)="pendingDelete.set(category)"
+              >
+                <combi-icon name="trash" [size]="16" />
+              </button>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+
+  <div class="card p-6 lg:sticky lg:top-24">
+    <h3 class="font-display text-base font-semibold">
+      {{ editing() ? 'Edit category' : 'New category' }}
+    </h3>
+
+    <form class="mt-5 space-y-4" novalidate (submit)="save(); $event.preventDefault()">
+      <div>
+        <label class="label" for="category-name">Name</label>
+        <input
+          id="category-name"
+          class="input"
+          [class.input-invalid]="
+            categoryForm.name().touched() && categoryForm.name().errors().length > 0
+          "
+          [formField]="categoryForm.name"
+        />
+        @if (categoryForm.name().touched() && categoryForm.name().errors().length) {
+          <p class="field-error" role="alert">
+            <combi-icon name="alert" [size]="13" />
+            {{ categoryForm.name().errors()[0].message }}
+          </p>
+        }
+      </div>
+
+      <div>
+        <label class="label" for="category-image">Image URL</label>
+        <input
+          id="category-image"
+          type="url"
+          class="input text-xs"
+          [class.input-invalid]="
+            categoryForm.image().touched() && categoryForm.image().errors().length > 0
+          "
+          [formField]="categoryForm.image"
+        />
+        @if (categoryForm.image().touched() && categoryForm.image().errors().length) {
+          <p class="field-error" role="alert">
+            <combi-icon name="alert" [size]="13" />
+            {{ categoryForm.image().errors()[0].message }}
+          </p>
+        }
+      </div>
+
+      <div class="flex gap-2">
+        <button type="submit" class="btn btn-primary btn-sm flex-1" [disabled]="busy()">
+          @if (busy()) {
+            Saving…
+          } @else {
+            {{ editing() ? 'Save' : 'Create' }}
+          }
+        </button>
+        @if (editing()) {
+          <button type="button" class="btn btn-outline btn-sm" (click)="cancelEdit()">
+            Cancel
+          </button>
+        }
+      </div>
+    </form>
+  </div>
+</div>
+
+<combi-confirm-dialog
+  [open]="pendingDelete() !== undefined"
+  title="Delete this category?"
+  [message]="
+    'Deleting \'' + (pendingDelete()?.name ?? '') + '\' affects every product assigned to it.'
+  "
+  confirmLabel="Delete category"
+  [busy]="deleting()"
+  (confirm)="confirmDelete()"
+  (cancel)="pendingDelete.set(undefined)"
+/>

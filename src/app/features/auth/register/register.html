@@ -1,0 +1,127 @@
+<div class="mx-auto flex max-w-md flex-col justify-center px-4 py-16 sm:px-6">
+  <h1 class="font-display text-3xl font-semibold">Create an account</h1>
+  <p class="mt-2 text-sm text-muted-foreground">
+    Accounts are created against the public API and reset with it each day.
+  </p>
+
+  <div class="card mt-8 p-6">
+    <form novalidate (submit)="createAccount(); $event.preventDefault()">
+      @if (failure(); as message) {
+        <p
+          class="mb-5 flex items-start gap-2 rounded-lg bg-destructive-soft px-3.5 py-3 text-sm font-medium text-destructive"
+          role="alert"
+        >
+          <combi-icon name="alert" [size]="16" class="mt-0.5" />
+          {{ message }}
+        </p>
+      }
+
+      <div class="space-y-5">
+        <div>
+          <label class="label" for="register-name">Name</label>
+          <input
+            id="register-name"
+            class="input"
+            autocomplete="name"
+            [class.input-invalid]="
+              registerForm.name().touched() && registerForm.name().errors().length > 0
+            "
+            [formField]="registerForm.name"
+          />
+          @if (registerForm.name().touched() && registerForm.name().errors().length) {
+            <p class="field-error" role="alert">
+              <combi-icon name="alert" [size]="13" />
+              {{ registerForm.name().errors()[0].message }}
+            </p>
+          }
+        </div>
+
+        <div>
+          <label class="label" for="register-email">Email</label>
+          <div class="relative">
+            <input
+              id="register-email"
+              type="email"
+              class="input"
+              autocomplete="email"
+              [class.input-invalid]="
+                registerForm.email().touched() && registerForm.email().errors().length > 0
+              "
+              [formField]="registerForm.email"
+            />
+            @if (registerForm.email().pending()) {
+              <span class="absolute top-1/2 right-3 -translate-y-1/2 text-xs text-muted-foreground">
+                Checking…
+              </span>
+            }
+          </div>
+          @if (registerForm.email().touched() && registerForm.email().errors().length) {
+            <p class="field-error" role="alert">
+              <combi-icon name="alert" [size]="13" />
+              {{ registerForm.email().errors()[0].message }}
+            </p>
+          }
+        </div>
+
+        <div>
+          <label class="label" for="register-password">Password</label>
+          <input
+            id="register-password"
+            type="password"
+            class="input"
+            autocomplete="new-password"
+            [class.input-invalid]="
+              registerForm.password().touched() && registerForm.password().errors().length > 0
+            "
+            [formField]="registerForm.password"
+          />
+          <p class="mt-1.5 text-xs text-muted-foreground">
+            The API stores this in plain text — never reuse a real password.
+          </p>
+          @if (registerForm.password().touched() && registerForm.password().errors().length) {
+            <p class="field-error" role="alert">
+              <combi-icon name="alert" [size]="13" />
+              {{ registerForm.password().errors()[0].message }}
+            </p>
+          }
+        </div>
+
+        <div>
+          <label class="label" for="register-avatar">Avatar URL</label>
+          <input
+            id="register-avatar"
+            type="url"
+            class="input"
+            [class.input-invalid]="
+              registerForm.avatar().touched() && registerForm.avatar().errors().length > 0
+            "
+            [formField]="registerForm.avatar"
+          />
+          @if (registerForm.avatar().touched() && registerForm.avatar().errors().length) {
+            <p class="field-error" role="alert">
+              <combi-icon name="alert" [size]="13" />
+              {{ registerForm.avatar().errors()[0].message }}
+            </p>
+          }
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        class="btn btn-primary mt-6 w-full"
+        [disabled]="busy() || registerForm().pending()"
+      >
+        @if (busy()) {
+          Creating account…
+        } @else {
+          Create account
+        }
+      </button>
+    </form>
+  </div>
+
+  <p class="mt-6 text-center text-sm text-muted-foreground">
+    Already registered?
+    <a routerLink="/login" class="font-semibold text-accent hover:underline">Sign in</a>
+  </p>
+</div>

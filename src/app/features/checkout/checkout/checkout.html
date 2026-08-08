@@ -1,0 +1,270 @@
+@if (placedOrder(); as order) {
+  <!-- Confirmation -->
+  <div class="mx-auto max-w-2xl px-4 py-16 sm:px-6">
+    <div class="text-center">
+      <div
+        class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-success-soft text-success"
+      >
+        <combi-icon name="check" [size]="30" />
+      </div>
+      <h1 class="font-display text-3xl font-semibold">Order confirmed</h1>
+      <p class="mt-3 text-muted-foreground">
+        Thanks, {{ order.shipping.fullName }}. A receipt is on its way to
+        {{ order.shipping.email }}.
+      </p>
+      <p
+        class="tabular mt-5 inline-block rounded-full bg-surface-sunken px-4 py-2 text-sm font-semibold"
+      >
+        {{ order.reference }}
+      </p>
+    </div>
+
+    <div class="card mt-10 p-6">
+      <h2 class="font-display text-lg font-semibold">What you ordered</h2>
+      <ul class="mt-4 space-y-4">
+        @for (line of order.lines; track line.product.id) {
+          <li class="flex items-center gap-4">
+            <combi-safe-image
+              [src]="line.product.images[0]"
+              [alt]="line.product.title"
+              ratio="1 / 1"
+              class="w-14 shrink-0 overflow-hidden rounded-lg"
+            />
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm font-semibold">{{ line.product.title }}</p>
+              <p class="tabular text-xs text-muted-foreground">Quantity {{ line.quantity }}</p>
+            </div>
+            <p class="tabular text-sm font-semibold">
+              {{ line.product.price * line.quantity | currency: 'USD' }}
+            </p>
+          </li>
+        }
+      </ul>
+
+      <dl class="mt-6 space-y-2 border-t pt-4 text-sm">
+        <div class="flex justify-between">
+          <dt class="text-muted-foreground">Delivering to</dt>
+          <dd class="text-right font-medium">
+            {{ order.shipping.address }}, {{ order.shipping.city }} {{ order.shipping.postalCode }},
+            {{ order.shipping.country }}
+          </dd>
+        </div>
+        <div class="flex justify-between border-t pt-2 font-display text-base font-semibold">
+          <dt>Total paid</dt>
+          <dd class="tabular">{{ order.totals.total | currency: 'USD' }}</dd>
+        </div>
+      </dl>
+    </div>
+
+    <p class="mt-6 text-center text-xs text-muted-foreground">
+      This is a demo storefront. No payment was taken and nothing will be shipped.
+    </p>
+
+    <div class="mt-6 text-center">
+      <a routerLink="/" class="btn btn-primary btn-sm">Continue shopping</a>
+    </div>
+  </div>
+} @else if (cart.isEmpty()) {
+  <combi-empty-state
+    icon="cart"
+    title="There is nothing to check out"
+    description="Add a product to your cart first."
+  >
+    <a routerLink="/" class="btn btn-primary btn-sm mt-5">Browse products</a>
+  </combi-empty-state>
+} @else {
+  <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <h1 class="font-display text-3xl font-semibold">Checkout</h1>
+
+    <form
+      class="mt-8 lg:grid lg:grid-cols-[1fr_22rem] lg:items-start lg:gap-10"
+      novalidate
+      (submit)="placeOrder(); $event.preventDefault()"
+    >
+      <!-- Delivery details -->
+      <div class="card p-6">
+        <h2 class="font-display text-lg font-semibold">Delivery details</h2>
+
+        <div class="mt-6 space-y-5">
+          <div>
+            <label class="label" for="fullName">Full name</label>
+            <input
+              id="fullName"
+              class="input"
+              autocomplete="name"
+              [class.input-invalid]="
+                checkoutForm.fullName().touched() && checkoutForm.fullName().errors().length > 0
+              "
+              [formField]="checkoutForm.fullName"
+            />
+            @if (checkoutForm.fullName().touched() && checkoutForm.fullName().errors().length) {
+              <p class="field-error" role="alert">
+                <combi-icon name="alert" [size]="13" />
+                {{ checkoutForm.fullName().errors()[0].message }}
+              </p>
+            }
+          </div>
+
+          <div>
+            <label class="label" for="email">Email</label>
+            <input
+              id="email"
+              type="email"
+              class="input"
+              autocomplete="email"
+              [class.input-invalid]="
+                checkoutForm.email().touched() && checkoutForm.email().errors().length > 0
+              "
+              [formField]="checkoutForm.email"
+            />
+            <p class="mt-1.5 text-xs text-muted-foreground">Used only for the order receipt.</p>
+            @if (checkoutForm.email().touched() && checkoutForm.email().errors().length) {
+              <p class="field-error" role="alert">
+                <combi-icon name="alert" [size]="13" />
+                {{ checkoutForm.email().errors()[0].message }}
+              </p>
+            }
+          </div>
+
+          <div>
+            <label class="label" for="address">Street address</label>
+            <input
+              id="address"
+              class="input"
+              autocomplete="street-address"
+              [class.input-invalid]="
+                checkoutForm.address().touched() && checkoutForm.address().errors().length > 0
+              "
+              [formField]="checkoutForm.address"
+            />
+            @if (checkoutForm.address().touched() && checkoutForm.address().errors().length) {
+              <p class="field-error" role="alert">
+                <combi-icon name="alert" [size]="13" />
+                {{ checkoutForm.address().errors()[0].message }}
+              </p>
+            }
+          </div>
+
+          <div class="grid gap-5 sm:grid-cols-2">
+            <div>
+              <label class="label" for="city">City</label>
+              <input
+                id="city"
+                class="input"
+                autocomplete="address-level2"
+                [class.input-invalid]="
+                  checkoutForm.city().touched() && checkoutForm.city().errors().length > 0
+                "
+                [formField]="checkoutForm.city"
+              />
+              @if (checkoutForm.city().touched() && checkoutForm.city().errors().length) {
+                <p class="field-error" role="alert">
+                  <combi-icon name="alert" [size]="13" />
+                  {{ checkoutForm.city().errors()[0].message }}
+                </p>
+              }
+            </div>
+
+            <div>
+              <label class="label" for="postalCode">Postal code</label>
+              <input
+                id="postalCode"
+                class="input"
+                autocomplete="postal-code"
+                [class.input-invalid]="
+                  checkoutForm.postalCode().touched() &&
+                  checkoutForm.postalCode().errors().length > 0
+                "
+                [formField]="checkoutForm.postalCode"
+              />
+              @if (
+                checkoutForm.postalCode().touched() && checkoutForm.postalCode().errors().length
+              ) {
+                <p class="field-error" role="alert">
+                  <combi-icon name="alert" [size]="13" />
+                  {{ checkoutForm.postalCode().errors()[0].message }}
+                </p>
+              }
+            </div>
+          </div>
+
+          <div>
+            <label class="label" for="country">Country</label>
+            <select id="country" class="input" [formField]="checkoutForm.country">
+              <option value="United States">United States</option>
+              <option value="Bolivia">Bolivia</option>
+              <option value="Colombia">Colombia</option>
+              <option value="Mexico">Mexico</option>
+              <option value="Spain">Spain</option>
+              <option value="Argentina">Argentina</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <aside class="mt-8 lg:sticky lg:top-24 lg:mt-0">
+        <div class="card p-6">
+          <h2 class="font-display text-lg font-semibold">Order summary</h2>
+
+          <ul class="mt-5 space-y-3">
+            @for (line of cart.items(); track line.product.id) {
+              <li class="flex items-center gap-3">
+                <combi-safe-image
+                  [src]="line.product.images[0]"
+                  [alt]="line.product.title"
+                  ratio="1 / 1"
+                  class="w-12 shrink-0 overflow-hidden rounded-lg"
+                />
+                <div class="min-w-0 flex-1">
+                  <p class="truncate text-xs font-semibold">{{ line.product.title }}</p>
+                  <p class="tabular text-xs text-muted-foreground">×{{ line.quantity }}</p>
+                </div>
+                <p class="tabular text-xs font-semibold">
+                  {{ line.product.price * line.quantity | currency: 'USD' }}
+                </p>
+              </li>
+            }
+          </ul>
+
+          <dl class="mt-5 space-y-2.5 border-t pt-4 text-sm">
+            <div class="flex justify-between">
+              <dt class="text-muted-foreground">Subtotal</dt>
+              <dd class="tabular font-medium">{{ cart.totals().subtotal | currency: 'USD' }}</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-muted-foreground">Delivery</dt>
+              <dd class="tabular font-medium">
+                @if (cart.totals().shipping === 0) {
+                  <span class="text-success">Free</span>
+                } @else {
+                  {{ cart.totals().shipping | currency: 'USD' }}
+                }
+              </dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-muted-foreground">Estimated tax</dt>
+              <dd class="tabular font-medium">{{ cart.totals().tax | currency: 'USD' }}</dd>
+            </div>
+            <div class="flex justify-between border-t pt-3 font-display text-base font-semibold">
+              <dt>Total</dt>
+              <dd class="tabular">{{ cart.totals().total | currency: 'USD' }}</dd>
+            </div>
+          </dl>
+
+          <button type="submit" class="btn btn-accent mt-6 w-full" [disabled]="!canSubmit()">
+            @if (placing()) {
+              Placing order…
+            } @else {
+              Place order
+            }
+          </button>
+
+          <p class="mt-3 text-center text-xs text-muted-foreground">
+            Simulated checkout — no payment details are collected.
+          </p>
+        </div>
+      </aside>
+    </form>
+  </div>
+}
