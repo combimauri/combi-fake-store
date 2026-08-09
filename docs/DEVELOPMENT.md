@@ -324,7 +324,13 @@ fallback route points at `/index.html`, which does not exist when `outputMode` i
 the build emits `index.csr.html` instead. Deployed with the preset alone, the app would not
 server-render and `/` would 404.
 
-Two details in `vercel.json` are load-bearing:
+Hashed bundles are served `immutable` for a year, while HTML and the favicon stay
+`must-revalidate`. The rule targets the content-hash pattern (`name-XXXXXXXX.js|css`)
+specifically, so an unhashed file can never be cached permanently. Because `routes` cannot
+be combined with a top-level `headers` block, the header is set by a rule with
+`"continue": true` placed before the filesystem phase.
+
+Three details in `vercel.json` are load-bearing:
 
 - **`includeFiles: "dist/fake-store/**"`** — without it the deploy succeeds and the function
   fails at runtime the moment it imports `server.mjs`.
