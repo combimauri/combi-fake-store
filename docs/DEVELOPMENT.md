@@ -51,17 +51,18 @@ are bundled into the client and are readable by anyone.
 
 ## Running the production server locally
 
-`npm run serve:ssr:fake-store` starts the built Express server on `:4000`, but requests will
-be rejected:
+`npm run serve:ssr:fake-store` starts the built Express server on `:4000`.
+
+This works only because `localhost` is listed in `security.allowedHosts` (see
+[Allowed hosts](#allowed-hosts) below). Angular 20+ rejects any request whose `Host` header
+is not on that list, and the default is an empty list — meaning **everything** is rejected:
 
 ```
 Bad Request: Header "host" with value "localhost:4000" is not allowed.
 ```
 
-This is Angular 22's **SSRF protection**, which requires the allowed hosts to be declared. It
-is expected, not a bug. For local work use `npm start`, which handles it. For a real
-deployment, configure the allowed hosts for your domain before going live — see
-[Angular's SSRF guidance](https://angular.dev/best-practices/security).
+If you see that, the host is missing from the list. Ports are stripped before the check, so
+`localhost` covers any port.
 
 ---
 
@@ -272,19 +273,79 @@ Produces:
 
 ```
 dist/fake-store/
-├── browser/     # static assets
-├── server/      # server.mjs — the SSR Express app
+├── browser/     # static assets + prerendered routes
+├── server/      # server.mjs — the SSR request handler
 └── prerendered-routes.json
 ```
 
 Any Node host works. Set `PORT` if `4000` is unsuitable.
 
-Before going live:
+### Allowed hosts
 
-1. **Configure allowed hosts** for the SSR server (see [above](#running-the-production-server-locally)).
-2. **Point `environment.ts` at the intended API** if it is not the public one.
-3. Note the fonts load from Google Fonts — self-host them if your CSP forbids third-party
-   origins.
+Angular 20+ validates the `Host`, `X-Forwarded-Host`, and `Forwarded` headers against
+`security.allowedHosts` in `angular.json`, and **rejects everything by default**. This is
+[SSRF protection](https://angular.dev/best-practices/security#preventing-server-side-request-forgery-ssrf),
+not a bug.
+
+```jsonc
+// angular.json → projects.fake-store.architect.build.options
+"security": { "allowedHosts": ["*.vercel.app", "localhost"] }
+```
+
+Three things to know:
+
+- The value is **baked into the build** — it is compiled into
+  `dist/fake-store/server/angular-app-engine-manifest.mjs`. A runtime environment variable
+  will not change it; you must rebuild.
+- `*.` prefixes match by suffix, so `*.vercel.app` covers both the production alias and every
+  preview deployment.
+- Prefer listing real hosts over `"*"`. Using `"*"` disables the protection entirely and logs
+  a warning.
+
+If you need per-environment control without rebuilding, `AngularNodeAppEngine` also accepts
+hosts at runtime in `src/server.ts`, where they are merged with the compiled list:
+
+```ts
+new AngularNodeAppEngine({ allowedHosts: process.env['ALLOWED_HOSTS']?.split(',') });
+```
+
+### Vercel
+
+The repo is configured for Vercel. Two files do the work:
+
+| File | Role |
+| --- | --- |
+| `api/index.mjs` | Wraps the compiled `reqHandler` as a Vercel Function |
+| `vercel.json` | Serves static assets, rewrites everything else to that function |
+
+This wrapper is necessary because **Vercel's built-in Angular preset is static-only**. It
+builds with `ng build`, serves `dist/<project>/browser`, and never invokes `server.mjs`. Its
+fallback route points at `/index.html`, which does not exist when `outputMode` is `server` —
+the build emits `index.csr.html` instead. Deployed with the preset alone, the app would not
+server-render and `/` would 404.
+
+Two details in `vercel.json` are load-bearing:
+
+- **`includeFiles: "dist/fake-store/**"`** — without it the deploy succeeds and the function
+  fails at runtime the moment it imports `server.mjs`.
+- **An explicit `{ "source": "/", ... }` rewrite** in addition to the catch-all. Vercel checks
+  the filesystem before applying rewrites, so the root needs its own rule to reach the
+  function reliably.
+
+To verify a deployment actually server-renders, ask for markup only the server could have
+produced:
+
+```bash
+curl -s https://<deployment-url>/ | grep -c "Classic Red"
+```
+
+A non-zero count means SSR ran; zero means you received the client shell.
+
+### Before going live elsewhere
+
+1. Add your domain to `security.allowedHosts` and rebuild.
+2. Point `environment.ts` at the intended API if it is not the public one.
+3. Fonts load from Google Fonts — self-host them if your CSP forbids third-party origins.
 
 ---
 
@@ -292,7 +353,7 @@ Before going live:
 
 | Symptom | Cause |
 | --- | --- |
-| `Header "host" … is not allowed` | Angular 22 SSRF protection on the production server. Use `npm start` locally; configure allowed hosts for deployment. |
+| `Header "host" … is not allowed` | The host is missing from `security.allowedHosts` in `angular.json`. Add it and **rebuild** — the list is baked into the bundle. |
 | Products vanish, IDs 404 | The daily reseed. Expected — never hardcode an ID. |
 | `limit` returns everything | `offset` is missing. They must be sent together. |
 | Empty categories in a filter | Something is calling `GET /categories` for the storefront. Derive facets from products instead. |

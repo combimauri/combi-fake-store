@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "outputDirectory": "dist/fake-store/browser",
+  "rewrites": [
+    { "source": "/", "destination": "/api" },
+    { "source": "/(.*)", "destination": "/api" }
+  ],
+  "functions": {
+    "api/index.mjs": {
+      "includeFiles": "dist/fake-store/**"
+    }
+  }
+}
